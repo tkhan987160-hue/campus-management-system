@@ -1,3 +1,5 @@
+import '../services/api_service.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'register_page.dart';
 import 'home_page.dart';
@@ -12,7 +14,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _rollNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
@@ -35,32 +37,56 @@ class _LoginPageState extends State<LoginPage>
   @override
   void dispose() {
     _animationController.dispose();
-    _usernameController.dispose();
+    _rollNumberController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _handleLogin() {
-  if (_formKey.currentState!.validate()) {
-    // Navigate to Home Page
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HomePage(
-          username: _usernameController.text,
-        ),
-      ),
-    );
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('✅ Login Successful!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-}
+  void _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
 
+    final rollNumber = _rollNumberController.text.trim();
+    final password = _passwordController.text.trim();
+
+    try {
+      final response = await ApiService.login(rollNumber, password);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // SUCCESS
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Login Successful!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(
+              username: data['name'],
+              studentId: data['rollNumber'],
+            ),
+          ),
+        );
+      } else {
+        // FAILED LOGIN
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Login Failed: ${response.body}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // ERROR
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('⚠️ Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,10 +167,10 @@ class _LoginPageState extends State<LoginPage>
               ),
               const SizedBox(height: 50),
               TextFormField(
-                controller: _usernameController,
+                controller: _rollNumberController,
                 style: const TextStyle(color: Colors.white, fontSize: 16),
                 decoration: InputDecoration(
-                  labelText: 'Username',
+                  labelText: 'Roll Number',
                   labelStyle: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 14,
@@ -161,10 +187,7 @@ class _LoginPageState extends State<LoginPage>
                     ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color(0xFFFF6B35),
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: Color(0xFFFF6B35), width: 2),
                   ),
                 ),
                 validator: (value) {
@@ -211,10 +234,7 @@ class _LoginPageState extends State<LoginPage>
                     ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color(0xFFFF6B35),
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: Color(0xFFFF6B35), width: 2),
                   ),
                 ),
                 validator: (value) {

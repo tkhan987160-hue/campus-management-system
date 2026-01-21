@@ -1,3 +1,4 @@
+import 'package:campus_link/widgets/app_scroll_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class ResultsPage extends StatelessWidget {
@@ -34,24 +35,25 @@ class ResultsPage extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildOverallCard(averageMarks, overallGrade),
-            const SizedBox(height: 30),
-            const Text(
-              'Subject-wise Results',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+      body: SafeArea(
+        child: AppScrollWrapper(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildOverallCard(averageMarks, overallGrade),
+              const SizedBox(height: 30),
+              const Text(
+                'Subject-wise Results',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            ...results.map((result) => _buildResultCard(result)),
-          ],
+              const SizedBox(height: 15),
+              ...results.map((result) => _buildResultCard(result)),
+            ],
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:campus_link/widgets/app_scroll_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class NoticePage extends StatelessWidget {
@@ -67,24 +68,25 @@ class NoticePage extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeaderCard(unreadCount, notices.length),
-            const SizedBox(height: 30),
-            const Text(
-              'Recent Notices',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+      body: SafeArea(
+        child: AppScrollWrapper(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeaderCard(unreadCount, notices.length),
+              const SizedBox(height: 30),
+              const Text(
+                'Recent Notices',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            ...notices.map((notice) => _buildNoticeCard(notice, context)),
-          ],
+              const SizedBox(height: 15),
+              ...notices.map((notice) => _buildNoticeCard(notice, context)),
+            ],
+          ),
         ),
       ),
     );

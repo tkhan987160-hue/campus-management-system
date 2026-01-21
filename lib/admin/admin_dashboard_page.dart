@@ -1,12 +1,32 @@
 import 'package:flutter/material.dart';
-import 'admin_attendance_page.dart'; 
+import 'admin_attendance_page.dart';
 import 'admin_assignments_page.dart';
 import 'admin_results_page.dart';
 import 'admin_fees_page.dart';
 import 'admin_notices_page.dart';
+import '../widgets/hover_card.dart';
 
 class AdminDashboardPage extends StatelessWidget {
-  const AdminDashboardPage({super.key});
+  final String subject;
+  final String adminName;
+
+  const AdminDashboardPage({
+    super.key,
+    required this.adminName,
+    required this.subject,
+  });
+
+  bool _isAllowed(String feature) {
+    if (subject == 'Maths') {
+      return ['attendance', 'assignments', 'results'].contains(feature);
+    }
+
+    if (subject == 'Physics') {
+      return ['attendance', 'results', 'notices'].contains(feature);
+    }
+
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,13 +34,24 @@ class AdminDashboardPage extends StatelessWidget {
       backgroundColor: const Color(0xFF0a0a0a),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1a1a1a),
-        title: const Row(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => {Navigator.pop(context)},
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.admin_panel_settings, color: Color(0xFFFF6B35)),
-            SizedBox(width: 10),
             Text(
-              'Admin Panel',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              'Welcome, $adminName',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              'Subject: $subject',
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
             ),
           ],
         ),
@@ -33,75 +64,118 @@ class AdminDashboardPage extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildWelcomeCard(),
-            const SizedBox(height: 30),
-            const Text(
-              'Manage Campus Data',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+      body: Scrollbar(
+        thumbVisibility: true, // 👈 scrollbar hamesha visible
+        thickness: 8,
+        radius: const Radius.circular(10),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildWelcomeCard(),
+              const SizedBox(height: 30),
+              const Text(
+                'Manage Campus Data',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 15,
-              childAspectRatio: 1.2,
-              children: [
-                _buildAdminCard(
-                  context,
-                  'Manage Attendance',
-                  Icons.calendar_today,
-                  Colors.green,
-                  const AdminAttendancePage(),
-                ),
-                _buildAdminCard(
-                  context,
-                  'Manage Assignments',
-                  Icons.assignment,
-                  Colors.orange,
-                  const AdminAssignmentsPage(),
-                ),
-                _buildAdminCard(
-                  context,
-                  'Manage Results',
-                  Icons.assessment,
-                  Colors.blue,
-                  const AdminResultsPage(),
-                ),
-                _buildAdminCard(
-                  context,
-                  'Manage Fees',
-                  Icons.payment,
-                  Colors.red,
-                  const AdminFeesPage(),
-                ),
-                _buildAdminCard(
-                  context,
-                  'Manage Notices',
-                  Icons.notifications,
-                  Colors.cyan,
-                  const AdminNoticesPage(),
-                ),
-                _buildAdminCard(
-                  context,
-                  'Student Reports',
-                  Icons.people,
-                  Colors.purple,
-                  null,
-                ),
-              ],
-            ),
-          ],
+              const SizedBox(height: 20),
+              GridView.count(
+                crossAxisCount: 3,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+                childAspectRatio: 1.4,
+                children: [
+                  if (_isAllowed('attendance'))
+                    HoverCard(
+                      icon: Icons.calendar_today,
+                      title: 'Attendance',
+                      subtitle: 'View & manage',
+                      color: Colors.green,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                AdminAttendancePage(subject: subject),
+                          ),
+                        );
+                      },
+                    ),
+
+                  if (_isAllowed('assignments'))
+                    HoverCard(
+                      icon: Icons.assignment,
+                      title: 'Assignments',
+                      subtitle: '5 pending',
+                      color: Colors.orange,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdminAssignmentsPage(),
+                          ),
+                        );
+                      },
+                    ),
+
+                  if (_isAllowed('results'))
+                    HoverCard(
+                      icon: Icons.assessment,
+                      title: 'Results',
+                      subtitle: 'manage  result',
+                      color: Colors.blue,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdminResultsPage(),
+                          ),
+                        );
+                      },
+                    ),
+
+                  if (_isAllowed('fees'))
+                    HoverCard(
+                      icon: Icons.payment,
+                      title: 'Fees',
+                      subtitle: 'Manage fees',
+                      color: Colors.red,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdminFeesPage(),
+                          ),
+                        );
+                      },
+                    ),
+
+                  if (_isAllowed('notices'))
+                    HoverCard(
+                      icon: Icons.notifications,
+                      title: 'Notices',
+                      subtitle: 'Manage Notices',
+                      color: Colors.cyan,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdminNoticesPage(),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -141,52 +215,6 @@ class AdminDashboardPage extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAdminCard(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color color,
-    Widget? page,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        if (page != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => page),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Coming Soon!')),
-          );
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.5), width: 2),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 50, color: color),
-            const SizedBox(height: 15),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

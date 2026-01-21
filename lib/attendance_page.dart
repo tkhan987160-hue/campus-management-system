@@ -1,26 +1,73 @@
+import 'package:campus_link/widgets/app_scroll_wrapper.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AttendancePage extends StatefulWidget {
-  const AttendancePage({super.key});
+  final String studentId;
+  const AttendancePage({super.key, required this.studentId});
 
   @override
   State<AttendancePage> createState() => _AttendancePageState();
 }
 
 class _AttendancePageState extends State<AttendancePage> {
-  final List<Subject> subjects = [
-    Subject('Data Structures', 45, 50, Colors.blue),
-    Subject('Database Management', 38, 40, Colors.green),
-    Subject('Web Development', 42, 48, Colors.orange),
-    Subject('Operating Systems', 35, 42, Colors.purple),
-    Subject('Computer Networks', 40, 45, Colors.red),
-  ];
+  List<Subject> subjects = [];
+
+  double attendancePercentage = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAttendancePercentage();
+    fetchSubjectWiseAttendance();
+  }
+
+  Future<void> fetchAttendancePercentage() async {
+    final url = Uri.parse(
+      'http://10.0.2.2:5000/api/attendance/stats/${widget.studentId}',
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        attendancePercentage = double.parse(data['percentage']);
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> fetchSubjectWiseAttendance() async {
+    final url = Uri.parse(
+      'http://10.0.2.2:5000/api/attendance/subject-wise/${widget.studentId}',
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+
+      setState(() {
+        subjects = data.map<Subject>((item) {
+          return Subject(
+            item['subject'],
+            item['present'],
+            item['total'],
+            Colors.orange,
+          );
+        }).toList();
+
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    double totalPresent = subjects.fold(0, (sum, s) => sum + s.present);
-    double totalClasses = subjects.fold(0, (sum, s) => sum + s.total);
-    double overallPercentage = (totalPresent / totalClasses) * 100;
+    double overallPercentage = attendancePercentage;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
@@ -33,30 +80,30 @@ class _AttendancePageState extends State<AttendancePage> {
         ),
         title: const Text(
           'Attendance',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildOverallCard(overallPercentage),
-            const SizedBox(height: 30),
-            const Text(
-              'Subject-wise Attendance',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+      body: SafeArea(
+        child: AppScrollWrapper(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildOverallCard(overallPercentage),
+              const SizedBox(height: 30),
+              const Text(
+                'Subject-wise Attendance',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            ...subjects.map((subject) => _buildSubjectCard(subject)),
-          ],
+              const SizedBox(height: 15),
+              ...subjects.map((subject) => _buildSubjectCard(subject)),
+            ],
+          ),
         ),
       ),
     );
@@ -74,8 +121,9 @@ class _AttendancePageState extends State<AttendancePage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (percentage >= 75 ? Colors.green : Colors.red)
-                .withOpacity(0.3),
+            color: (percentage >= 75 ? Colors.green : Colors.red).withOpacity(
+              0.3,
+            ),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -103,10 +151,7 @@ class _AttendancePageState extends State<AttendancePage> {
           const SizedBox(height: 10),
           Text(
             percentage >= 75 ? '✓ Required: 75%' : '⚠ Below Required: 75%',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.white),
           ),
         ],
       ),
@@ -115,17 +160,14 @@ class _AttendancePageState extends State<AttendancePage> {
 
   Widget _buildSubjectCard(Subject subject) {
     double percentage = (subject.present / subject.total) * 100;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFF1a1a1a),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: subject.color.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: subject.color.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +186,10 @@ class _AttendancePageState extends State<AttendancePage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: subject.color.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -175,17 +220,11 @@ class _AttendancePageState extends State<AttendancePage> {
             children: [
               Text(
                 'Present: ${subject.present}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade400,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
               ),
               Text(
                 'Total: ${subject.total}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade400,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
               ),
             ],
           ),

@@ -1,3 +1,4 @@
+import 'package:campus_link/widgets/app_scroll_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class AssignmentsPage extends StatefulWidget {
@@ -72,15 +73,16 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStatsCard(pendingCount),
-            const SizedBox(height: 30),
-            _buildTabSection(),
-          ],
+      body: SafeArea(
+        child: AppScrollWrapper(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatsCard(pendingCount),
+              const SizedBox(height: 30),
+              _buildTabSection(),
+            ],
+          ),
         ),
       ),
     );

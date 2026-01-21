@@ -1,3 +1,4 @@
+import 'package:campus_link/widgets/app_scroll_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class LibraryPage extends StatelessWidget {
@@ -35,10 +36,7 @@ class LibraryPage extends StatelessWidget {
         ),
         title: const Text(
           'Library',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
@@ -47,26 +45,27 @@ class LibraryPage extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStatsCard(issuedBooks.length),
-            const SizedBox(height: 30),
-            const Text(
-              'Issued Books',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+      body: SafeArea(
+        child: AppScrollWrapper(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatsCard(issuedBooks.length),
+              const SizedBox(height: 30),
+              const Text(
+                'Issued Books',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            ...issuedBooks.map((book) => _buildBookCard(book, context)),
-            const SizedBox(height: 30),
-            _buildQuickActions(context),
-          ],
+              const SizedBox(height: 15),
+              ...issuedBooks.map((book) => _buildBookCard(book, context)),
+              const SizedBox(height: 30),
+              _buildQuickActions(context),
+            ],
+          ),
         ),
       ),
     );
@@ -112,30 +111,21 @@ class LibraryPage extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-          ),
-        ),
+        Text(label, style: const TextStyle(fontSize: 13, color: Colors.white)),
       ],
     );
   }
 
   Widget _buildBookCard(Book book, BuildContext context) {
     bool isOverdue = book.daysLeft < 0;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFF1a1a1a),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: book.color.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: book.color.withOpacity(0.3), width: 1),
       ),
       child: Row(
         children: [
@@ -146,11 +136,7 @@ class LibraryPage extends StatelessWidget {
               color: book.color,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
-              Icons.menu_book,
-              color: Colors.white,
-              size: 30,
-            ),
+            child: const Icon(Icons.menu_book, color: Colors.white, size: 30),
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -168,10 +154,7 @@ class LibraryPage extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   book.author,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade400,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -197,10 +180,7 @@ class LibraryPage extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: Icon(
-              Icons.info_outline,
-              color: book.color,
-            ),
+            icon: Icon(Icons.info_outline, color: book.color),
             onPressed: () {
               _showBookDetails(context, book);
             },
@@ -249,7 +229,11 @@ class LibraryPage extends StatelessWidget {
   }
 
   Widget _buildActionButton(
-      String label, IconData icon, Color color, VoidCallback onTap) {
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -265,10 +249,7 @@ class LibraryPage extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               label,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: color, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -282,10 +263,7 @@ class LibraryPage extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1a1a1a),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          book.title,
-          style: const TextStyle(color: Colors.white),
-        ),
+        title: Text(book.title, style: const TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,10 +271,7 @@ class LibraryPage extends StatelessWidget {
             _buildDetailRow('Author', book.author),
             _buildDetailRow('Issue Date', book.issueDate),
             _buildDetailRow('Return Date', book.returnDate),
-            _buildDetailRow(
-              'Status',
-              book.daysLeft < 0 ? 'Overdue' : 'Active',
-            ),
+            _buildDetailRow('Status', book.daysLeft < 0 ? 'Overdue' : 'Active'),
           ],
         ),
         actions: [
@@ -315,10 +290,7 @@ class LibraryPage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(color: Colors.grey.shade400),
-          ),
+          Text(label, style: TextStyle(color: Colors.grey.shade400)),
           Text(
             value,
             style: const TextStyle(

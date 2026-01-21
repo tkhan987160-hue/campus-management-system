@@ -16,13 +16,28 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      // Simple admin check (in real app, use proper authentication)
-      if (_usernameController.text == 'admin' && 
-          _passwordController.text == 'admin123') {
+      String username = _usernameController.text;
+      String password = _passwordController.text;
+      
+      String adminName = '';
+      String assignedSubject = '';
+
+      // Admin-wise subject mapping
+      if (username == 'admin1' && password == 'admin123') {
+        adminName = 'Admin1';
+        assignedSubject = 'Maths';
+      } else if (username == 'admin2' && password == 'admin123') {
+        adminName = 'Admin2';
+        assignedSubject = 'Physics';
+      }
+
+      if (assignedSubject.isNotEmpty) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const AdminDashboardPage(),
+            builder: (context) => AdminDashboardPage(
+              adminName: adminName,
+              subject: assignedSubject),
           ),
         );
       } else {
@@ -48,10 +63,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
           decoration: BoxDecoration(
             color: const Color(0xFF1a1a1a),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: const Color(0xFFFF6B35),
-              width: 2,
-            ),
+            border: Border.all(color: const Color(0xFFFF6B35), width: 2),
           ),
           child: Form(
             key: _formKey,
@@ -79,13 +91,19 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   decoration: InputDecoration(
                     labelText: 'Admin Username',
                     labelStyle: TextStyle(color: Colors.grey.shade400),
-                    prefixIcon: const Icon(Icons.person, color: Color(0xFFFF6B35)),
+                    prefixIcon: const Icon(
+                      Icons.person,
+                      color: Color(0xFFFF6B35),
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey.shade700),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Color(0xFFFF6B35), width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFFF6B35),
+                        width: 2,
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -104,10 +122,15 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   decoration: InputDecoration(
                     labelText: 'Admin Password',
                     labelStyle: TextStyle(color: Colors.grey.shade400),
-                    prefixIcon: const Icon(Icons.lock, color: Color(0xFFFF6B35)),
+                    prefixIcon: const Icon(
+                      Icons.lock,
+                      color: Color(0xFFFF6B35),
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                         color: Colors.grey.shade500,
                       ),
                       onPressed: () {
@@ -121,7 +144,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Color(0xFFFF6B35), width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFFF6B35),
+                        width: 2,
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),

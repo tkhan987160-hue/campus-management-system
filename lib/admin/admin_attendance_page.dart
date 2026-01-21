@@ -1,294 +1,377 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AdminAttendancePage extends StatefulWidget {
-  const AdminAttendancePage({super.key});
+  final String subject;
+
+  const AdminAttendancePage({super.key, required this.subject});
 
   @override
   State<AdminAttendancePage> createState() => _AdminAttendancePageState();
 }
 
 class _AdminAttendancePageState extends State<AdminAttendancePage> {
-  final List<AttendanceData> attendanceList = [
-    AttendanceData('Data Structures', 45, 50),
-    AttendanceData('DBMS', 38, 40),
-    AttendanceData('Web Development', 42, 48),
-  ];
+  Map<String, List<Map<String, dynamic>>> attendanceRegister = {};
+  // 🔹 STEP 3.1: Class & Section selection
+  String selectedClass = 'BCA 2nd Year';
+  String selectedSection = 'A';
 
-  void _showAddDialog() {
-    final subjectController = TextEditingController();
-    final presentController = TextEditingController();
-    final totalController = TextEditingController();
+  Future<void> fetchStudents() async {
+    final url = Uri.parse('http://10.0.2.2:5000/api/students');
 
-    showDialog(
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+
+        setState(() {
+          students = data.map((s) {
+            return {
+              'id': s['_id'],
+              'rollNumber': s['rollNumber'],
+              'name': s['name'],
+              'status': 'P', // default Present
+            };
+          }).toList();
+        });
+      } else {
+        throw Exception('Failed to load students');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  // 🔹 STEP 3.3: Filtered students list
+  List<Map<String, dynamic>> students = [];
+
+  DateTime selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStudents();
+  }
+
+  void _loadAttendanceForDate() {
+    fetchStudents();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a1a),
-        title: const Text('Add Attendance', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: subjectController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Subject Name',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: presentController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Classes Present',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: totalController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Total Classes',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35)),
-            onPressed: () {
-              if (subjectController.text.isNotEmpty &&
-                  presentController.text.isNotEmpty &&
-                  totalController.text.isNotEmpty) {
-                setState(() {
-                  attendanceList.add(
-                    AttendanceData(
-                      subjectController.text,
-                      int.parse(presentController.text),
-                      int.parse(totalController.text),
-                    ),
-                  );
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('✅ Attendance Added!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
+      initialDate: selectedDate,
+      firstDate: DateTime(2024),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+        _loadAttendanceForDate();
+      });
+    }
+  }
+
+  Future<void> _saveAttendance() async {
+    final date =
+        '${selectedDate.year}-${selectedDate.month}-${selectedDate.day}';
+
+    for (final student in students) {
+      final url = Uri.parse('http://10.0.2.2:5000/api/attendance/mark');
+
+      await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'studentId': student['id'],
+          'subject': widget.subject,
+          'date': date,
+          'status': student['status'], // P / A / L
+        }),
+      );
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('✅ Attendance saved successfully'),
+        backgroundColor: Colors.green,
       ),
     );
   }
 
-  void _showEditDialog(int index) {
-    final item = attendanceList[index];
-    final subjectController = TextEditingController(text: item.subject);
-    final presentController = TextEditingController(text: item.present.toString());
-    final totalController = TextEditingController(text: item.total.toString());
+  String _dateKey(DateTime date) {
+    return '${date.year}-${date.month}-${date.day}';
+  }
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a1a),
-        title: const Text('Edit Attendance', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: subjectController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Subject Name',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: presentController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Classes Present',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: totalController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Total Classes',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35)),
-            onPressed: () {
-              setState(() {
-                attendanceList[index] = AttendanceData(
-                  subjectController.text,
-                  int.parse(presentController.text),
-                  int.parse(totalController.text),
-                );
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✅ Attendance Updated!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
+  String _attendanceKey() {
+    return '${widget.subject}_$selectedClass'
+        '_$selectedSection${_dateKey(selectedDate)}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
+
+      // 🔹 TOP BAR (Attendance + Back Arrow)
       appBar: AppBar(
         backgroundColor: const Color(0xFF1a1a1a),
-        title: const Text('Manage Attendance', style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        title: const Text(
+          "Attendance",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: attendanceList.length,
-        itemBuilder: (context, index) {
-          final item = attendanceList[index];
-          final percentage = (item.present / item.total * 100).toStringAsFixed(1);
-          
-          return Container(
-            margin: const EdgeInsets.only(bottom: 15),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1a1a1a),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.green.withOpacity(0.3)),
-            ),
-            child: Row(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.subject,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                // Class Dropdown
+                DropdownButton<String>(
+                  value: selectedClass,
+                  dropdownColor: Colors.grey.shade900,
+                  items: ['BCA 2nd Year', 'BCA 1st Year']
+                      .map(
+                        (c) => DropdownMenuItem(
+                          value: c,
+                          child: Text(
+                            c,
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Present: ${item.present} / ${item.total} ($percentage%)',
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () => _showEditDialog(index),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
+                      )
+                      .toList(),
+                  onChanged: (value) {
                     setState(() {
-                      attendanceList.removeAt(index);
+                      selectedClass = value!;
+                      _loadAttendanceForDate();
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('🗑️ Attendance Deleted!'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                  },
+                ),
+
+                // Section Dropdown
+                DropdownButton<String>(
+                  value: selectedSection,
+                  dropdownColor: Colors.grey.shade900,
+                  items: ['A', 'B']
+                      .map(
+                        (s) => DropdownMenuItem(
+                          value: s,
+                          child: Text(
+                            s,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedSection = value!;
+                      _loadAttendanceForDate();
+                    });
                   },
                 ),
               ],
             ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDialog,
-        backgroundColor: const Color(0xFFFF6B35),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Attendance'),
+            // 📅 Date Picker
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Date: ${selectedDate.day}-${selectedDate.month}-${selectedDate.year}',
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                IconButton(
+                  onPressed: _pickDate,
+                  icon: const Icon(Icons.calendar_today, color: Colors.orange),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // 📋 Table Header
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade900,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'RollNumber',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      'Name',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Text(
+                      'Status',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 👥 Students List
+            Expanded(
+              child: ListView.builder(
+                itemCount: students.length,
+                itemBuilder: (context, index) {
+                  final student = students[index];
+
+                  student['status'] ??= 'P'; // default Present
+
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1a1a1a),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        // 🔢 Roll No
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            student['rollNumber'],
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+
+                        // 👤 Name
+                        Expanded(
+                          flex: 4,
+                          child: Text(
+                            student['name'],
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+
+                        // ✅ Status (P / A / L)
+                        Expanded(
+                          flex: 5,
+                          child: Row(
+                            children: [
+                              _statusButton(student, 'P', Colors.green),
+                              _statusButton(student, 'A', Colors.red),
+                              _statusButton(student, 'L', Colors.orange),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // 💾 Save Button
+            SizedBox(
+              width: double.infinity,
+              child: Material(
+                color: Colors.amberAccent,
+                borderRadius: BorderRadius.circular(14),
+                elevation: 8,
+                shadowColor: Colors.black,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  splashColor: Colors.black.withOpacity(0.2), // 🔥 click ripple
+                  highlightColor: Colors.black.withOpacity(
+                    0.1,
+                  ), // 🔥 press effect
+                  onTap: _saveAttendance,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.save, color: Colors.black),
+                        SizedBox(width: 8),
+                        Text(
+                          'SAVE ATTENDANCE',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-class AttendanceData {
-  String subject;
-  int present;
-  int total;
+  Widget _statusButton(
+    Map<String, dynamic> student,
+    String value,
+    Color color,
+  ) {
+    final bool isSelected = student['status'] == value;
 
-  AttendanceData(this.subject, this.present, this.total);
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          student['status'] = value;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color),
+        ),
+        child: Text(
+          value,
+          style: TextStyle(
+            color: isSelected ? Colors.white : color,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
 }

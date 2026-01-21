@@ -1,7 +1,6 @@
 
 class AuthService {
   // Temporary testing API (JSONPlaceholder)
-  static const String _baseUrl = 'https://jsonplaceholder.typicode.com';
   
   // Login function (Demo - will validate any email/password for now)
   static Future<Map<String, dynamic>> login(String email, String password) async {

@@ -1,6 +1,6 @@
+import '../services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart';
-import 'home_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -12,9 +12,9 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _rollNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
 
   bool _obscurePassword = true;
   late AnimationController _animationController;
@@ -36,33 +36,47 @@ class _RegisterPageState extends State<RegisterPage>
   @override
   void dispose() {
     _animationController.dispose();
-    _usernameController.dispose();
+    _rollNumberController.dispose();
     _passwordController.dispose();
-    _emailController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
-  void _handleRegister() {
-  if (_formKey.currentState!.validate()) {
-    // Navigate to Home Page
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HomePage(
-          username: _usernameController.text,
-        ),
-      ),
-    );
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('✅ Registration Successful!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-}
+  void _handleRegister() async {
+    if (!_formKey.currentState!.validate()) return;
+    final rollNumber = _rollNumberController.text.trim();
+    final name = _nameController.text.trim();
+    final password = _passwordController.text.trim();
 
+    try {
+      final response = await ApiService.register(rollNumber, name, password);
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("✅ Registration successful"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => LoginPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("❌ ${response.body}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("⚠️ Error: $e"), backgroundColor: Colors.red),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,17 +150,21 @@ class _RegisterPageState extends State<RegisterPage>
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
               const SizedBox(height: 40),
               TextFormField(
-                controller: _usernameController,
+                controller: _rollNumberController,
                 style: const TextStyle(color: Colors.white, fontSize: 16),
                 decoration: InputDecoration(
-                  labelText: 'Username',
+                  labelText: 'Roll Number',
                   labelStyle: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 14,
@@ -163,31 +181,28 @@ class _RegisterPageState extends State<RegisterPage>
                     ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color(0xFFFF6B35),
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: Color(0xFFFF6B35), width: 2),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter username';
+                    return 'Please enter Roll Number';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 25),
               TextFormField(
-                controller: _emailController,
+                controller: _nameController,
                 style: const TextStyle(color: Colors.white, fontSize: 16),
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: 'Name',
                   labelStyle: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 14,
                   ),
                   prefixIcon: Icon(
-                    Icons.email_outlined,
+                    Icons.person_outline,
                     color: Colors.grey.shade500,
                     size: 22,
                   ),
@@ -198,18 +213,15 @@ class _RegisterPageState extends State<RegisterPage>
                     ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color(0xFFFF6B35),
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: Color(0xFFFF6B35), width: 2),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter email';
+                    return 'Please enter Name';
                   }
-                  if (!value.contains('@')) {
-                    return 'Please enter valid email';
+                  if (value.length < 2) {
+                    return 'Name too short';
                   }
                   return null;
                 },
@@ -251,10 +263,7 @@ class _RegisterPageState extends State<RegisterPage>
                     ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color(0xFFFF6B35),
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: Color(0xFFFF6B35), width: 2),
                   ),
                 ),
                 validator: (value) {

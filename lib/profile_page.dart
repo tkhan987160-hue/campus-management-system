@@ -1,8 +1,9 @@
+import 'package:campus_link/widgets/app_scroll_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatelessWidget {
   final String username;
-  
+
   const ProfilePage({super.key, required this.username});
 
   @override
@@ -18,10 +19,7 @@ class ProfilePage extends StatelessWidget {
         ),
         title: const Text(
           'Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
@@ -30,18 +28,19 @@ class ProfilePage extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            _buildProfileHeader(),
-            const SizedBox(height: 30),
-            _buildInfoSection(),
-            const SizedBox(height: 20),
-            _buildAcademicSection(),
-            const SizedBox(height: 20),
-            _buildActionButtons(context),
-          ],
+      body: SafeArea(
+        child: AppScrollWrapper(
+          child: Column(
+            children: [
+              _buildProfileHeader(),
+              const SizedBox(height: 30),
+              _buildInfoSection(),
+              const SizedBox(height: 20),
+              _buildAcademicSection(),
+              const SizedBox(height: 20),
+              _buildActionButtons(context),
+            ],
+          ),
         ),
       ),
     );
@@ -96,10 +95,7 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 5),
           const Text(
             'BCA Student • 2nd Year',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white70,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.white70),
           ),
         ],
       ),
@@ -158,7 +154,11 @@ class ProfilePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _buildInfoRow(Icons.school, 'Course', 'BCA (Bachelor of Computer Applications)'),
+          _buildInfoRow(
+            Icons.school,
+            'Course',
+            'BCA (Bachelor of Computer Applications)',
+          ),
           const SizedBox(height: 15),
           _buildInfoRow(Icons.calendar_month, 'Semester', '4th Semester'),
           const SizedBox(height: 15),
@@ -181,10 +181,7 @@ class ProfilePage extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade500,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
               ),
               const SizedBox(height: 3),
               Text(
@@ -205,12 +202,7 @@ class ProfilePage extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
-        _buildActionButton(
-          'Change Password',
-          Icons.lock,
-          Colors.blue,
-          () {},
-        ),
+        _buildActionButton('Change Password', Icons.lock, Colors.blue, () {}),
         const SizedBox(height: 15),
         _buildActionButton(
           'Download ID Card',
@@ -219,14 +211,9 @@ class ProfilePage extends StatelessWidget {
           () {},
         ),
         const SizedBox(height: 15),
-        _buildActionButton(
-          'Logout',
-          Icons.logout,
-          Colors.red,
-          () {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          },
-        ),
+        _buildActionButton('Logout', Icons.logout, Colors.red, () {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }),
       ],
     );
   }

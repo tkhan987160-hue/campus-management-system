@@ -1,3 +1,4 @@
+import 'package:campus_link/widgets/app_scroll_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class FeesPage extends StatelessWidget {
@@ -36,24 +37,25 @@ class FeesPage extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSummaryCard(totalPending, totalPaid),
-            const SizedBox(height: 30),
-            const Text(
-              'Payment History',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+      body: SafeArea(
+        child: AppScrollWrapper(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSummaryCard(totalPending, totalPaid),
+              const SizedBox(height: 30),
+              const Text(
+                'Payment History',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            ...transactions.map((transaction) => _buildTransactionCard(transaction, context)),
-          ],
+              const SizedBox(height: 15),
+              ...transactions.map((transaction) => _buildTransactionCard(transaction, context)),
+            ],
+          ),
         ),
       ),
     );

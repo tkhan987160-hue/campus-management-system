@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 // Import all page files
 import 'attendance_page.dart';
 import 'assignments_page.dart';
@@ -11,20 +13,57 @@ import 'profile_page.dart';
 
 class HomePage extends StatefulWidget {
   final String username;
-  
-  const HomePage({super.key, required this.username});
+  final String studentId;
+
+  const HomePage({super.key, required this.username, required this.studentId});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  double? attendancePercentage;
+  bool isLoadingAttendance = true;
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAttendance();
+  }
+
+  Future<void> fetchAttendance() async {
+    try {
+      final url = Uri.parse(
+        'http://10.0.2.2:5000/api/attendance/stats/${widget.studentId}',
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          attendancePercentage = (data['attendancePercentage'] as num)
+              .toDouble();
+          isLoadingAttendance = false;
+        });
+      } else {
+        throw Exception('Failed to load attendance');
+      }
+    } catch (e) {
+      setState(() {
+        attendancePercentage = 0;
+        isLoadingAttendance = false;
+      });
+    }
+  }
+
+  final ScrollController _scrollController = ScrollController();
 
   final List<DashboardCard> _dashboardItems = [
     DashboardCard(
       title: 'Attendance',
-      subtitle: '85% Present',
+      subtitle: '',
       icon: Icons.calendar_today,
       color: const Color(0xFF4CAF50),
       gradient: const LinearGradient(
@@ -101,35 +140,61 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildAppBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildWelcomeSection(),
-                    const SizedBox(height: 30),
-                    _buildQuickStats(),
-                    const SizedBox(height: 30),
-                    _buildSectionTitle('Quick Access'),
-                    const SizedBox(height: 15),
-                    _buildDashboardGrid(),
-                    const SizedBox(height: 30),
-                    _buildSectionTitle('Recent Activity'),
-                    const SizedBox(height: 15),
-                    _buildRecentActivity(),
-                  ],
-                ),
+        child: ScrollbarTheme(
+          data: ScrollbarThemeData(
+            // 👇 NORMAL state (thoda dull)
+            thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.hovered)) {
+                return Colors.white; // 🔥 hover par white
+              }
+              return Colors.white54; // normal visible
+            }),
+
+            trackColor: WidgetStateProperty.all(Colors.white12),
+
+            trackBorderColor: WidgetStateProperty.all(Colors.white24),
+          ),
+          child: Scrollbar(
+            controller: _scrollController,
+            thumbVisibility: true,
+            trackVisibility: true,
+            thickness: 8,
+            radius: const Radius.circular(12),
+            interactive: true,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(20, 20, 32, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildAppBar(),
+                  const SizedBox(height: 20),
+                  _buildWelcomeSection(),
+                  const SizedBox(height: 30),
+                  _buildQuickStats(),
+                  const SizedBox(height: 30),
+                  _buildSectionTitle('Quick Access'),
+                  const SizedBox(height: 15),
+                  _buildDashboardGrid(),
+                  const SizedBox(height: 30),
+                  _buildSectionTitle('Recent Activity'),
+                  const SizedBox(height: 15),
+                  _buildRecentActivity(),
+                  const SizedBox(height: 120),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Widget _buildAppBar() {
@@ -168,7 +233,8 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ProfilePage(username: widget.username),
+                      builder: (context) =>
+                          ProfilePage(username: widget.username),
                     ),
                   );
                 },
@@ -259,11 +325,7 @@ class _HomePageState extends State<HomePage> {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(15),
             ),
-            child: const Icon(
-              Icons.school,
-              size: 50,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.school, size: 50, color: Colors.white),
           ),
         ],
       ),
@@ -273,7 +335,14 @@ class _HomePageState extends State<HomePage> {
   Widget _buildQuickStats() {
     return Row(
       children: [
-        _buildStatCard('Attendance', '85%', Icons.check_circle, Colors.green),
+        _buildStatCard(
+          'Attendance',
+          isLoadingAttendance
+              ? '--'
+              : '${attendancePercentage?.toStringAsFixed(0)}%',
+          Icons.check_circle,
+          Colors.green,
+        ),
         const SizedBox(width: 15),
         _buildStatCard('CGPA', '8.5', Icons.star, Colors.amber),
         const SizedBox(width: 15),
@@ -283,17 +352,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildStatCard(
-      String label, String value, IconData icon, Color color) {
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: const Color(0xFF1a1a1a),
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
+          border: Border.all(color: color.withOpacity(0.3), width: 1),
         ),
         child: Column(
           children: [
@@ -310,10 +380,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 5),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade400,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
             ),
           ],
         ),
@@ -337,10 +404,10 @@ class _HomePageState extends State<HomePage> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 15,
-        mainAxisSpacing: 15,
-        childAspectRatio: 1.1,
+        crossAxisCount: 3,
+        crossAxisSpacing: 50,
+        mainAxisSpacing: 50,
+        childAspectRatio: 1.4,
       ),
       itemCount: _dashboardItems.length,
       itemBuilder: (context, index) {
@@ -351,13 +418,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDashboardCard(DashboardCard card) {
-    return GestureDetector(
+    return _AnimatedHoverCard(
       onTap: () {
-        // Navigate to respective pages based on card title
         Widget? page;
-        
+
         if (card.title == 'Attendance') {
-          page = const AttendancePage();
+          page = AttendancePage(studentId: widget.studentId);
         } else if (card.title == 'Assignments') {
           page = const AssignmentsPage();
         } else if (card.title == 'Results') {
@@ -374,67 +440,50 @@ class _HomePageState extends State<HomePage> {
           page = ProfilePage(username: widget.username);
         }
 
-        // Navigate if page is found
         if (page != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => page!),
-          );
+          Navigator.push(context, MaterialPageRoute(builder: (_) => page!));
         }
       },
       child: Container(
         decoration: BoxDecoration(
           gradient: card.gradient,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
               color: card.color.withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  card.icon,
-                  color: Colors.white,
-                  size: 30,
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    card.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(card.icon, color: Colors.white, size: 28),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  card.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    card.subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.85),
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  card.subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.8),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -475,7 +524,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildActivityItem(
-      String title, String subtitle, IconData icon, Color color) {
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+  ) {
     return Row(
       children: [
         Container(
@@ -502,19 +555,12 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 5),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade400,
-                ),
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
               ),
             ],
           ),
         ),
-        Icon(
-          Icons.arrow_forward_ios,
-          color: Colors.grey.shade600,
-          size: 16,
-        ),
+        Icon(Icons.arrow_forward_ios, color: Colors.grey.shade600, size: 16),
       ],
     );
   }
@@ -543,23 +589,47 @@ class _HomePageState extends State<HomePage> {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'Courses',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Courses'),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Calendar',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
+      ),
+    );
+  }
+}
+
+class _AnimatedHoverCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _AnimatedHoverCard({required this.child, required this.onTap});
+
+  @override
+  State<_AnimatedHoverCard> createState() => _AnimatedHoverCardState();
+}
+
+class _AnimatedHoverCardState extends State<_AnimatedHoverCard> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          transform: _hover
+              ? (Matrix4.identity()..translate(0.0, -8.0))
+              : Matrix4.identity(),
+          child: widget.child,
+        ),
       ),
     );
   }

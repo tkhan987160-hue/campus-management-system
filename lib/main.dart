@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.deepOrange,
-        useMaterial3: true,
+        useMaterial3: false,
         fontFamily: 'Arial',
       ),
       home: const LandingPage(),
