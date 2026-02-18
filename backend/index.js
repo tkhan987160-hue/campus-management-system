@@ -42,9 +42,7 @@ const complaintRoutes = require("./routes/complaintRoutes");
 app.use("/api/complaint", complaintRoutes);
 
 // 🔹 MongoDB
-mongoose.connect(
-  "mongodb+srv://tkhan987160_db_user:tosif123@cluster0.ktzv8si.mongodb.net/campus"
-).then(() => {
+mongoose.connect(process.env.MONGODB_URI).then(() => {
   console.log("MongoDB connected");
 }).catch((err) => {
   console.log("DB connection error:", err);
