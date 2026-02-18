@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // 🔹 Base URL (for Android emulator)
-  static const String baseUrl = "http://localhost:5000";
+  static const String baseUrl =
+      "https://campus-management-system-1-8uyc.onrender.com";
 
   /* =========================
      STUDENT REGISTER
@@ -29,19 +30,13 @@ class ApiService {
   /* =========================
      STUDENT / ADMIN LOGIN
   ========================= */
-  static Future<http.Response> login(
-    String rollNumber,
-    String password,
-  ) async {
+  static Future<http.Response> login(String rollNumber, String password) async {
     final url = Uri.parse("$baseUrl/api/auth/login");
 
     return await http.post(
       url,
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "rollNumber": rollNumber,
-        "password": password,
-      }),
+      body: jsonEncode({"rollNumber": rollNumber, "password": password}),
     );
   }
 }
