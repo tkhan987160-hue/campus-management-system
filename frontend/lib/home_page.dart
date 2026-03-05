@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchAttendance() async {
     try {
       final url = Uri.parse(
-        'http://10.0.2.2:5000/api/attendance/stats/${widget.studentId}',
+        'https://campus-management-system-1-8uyc.onrender.com/api/attendance/stats/${widget.studentId}',
       );
 
       final response = await http.get(url);
