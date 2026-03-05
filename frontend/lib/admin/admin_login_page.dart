@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'admin_dashboard_page.dart';
+import 'dart:convert';
+import 'package:campus_link/services/api_service.dart';
 
 class AdminLoginPage extends StatefulWidget {
   const AdminLoginPage({super.key});
@@ -14,36 +16,38 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
-  void _handleLogin() {
+  void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      String username = _usernameController.text;
-      String password = _passwordController.text;
-      
-      String adminName = '';
-      String assignedSubject = '';
+      final response = await ApiService.login(
+        _usernameController.text,
+        _passwordController.text,
+      );
 
-      // Admin-wise subject mapping
-      if (username == 'admin1' && password == 'admin123') {
-        adminName = 'Admin1';
-        assignedSubject = 'Maths';
-      } else if (username == 'admin2' && password == 'admin123') {
-        adminName = 'Admin2';
-        assignedSubject = 'Physics';
-      }
+      final data = jsonDecode(response.body);
 
-      if (assignedSubject.isNotEmpty) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AdminDashboardPage(
-              adminName: adminName,
-              subject: assignedSubject),
-          ),
-        );
+      if (response.statusCode == 200) {
+        if (data['role'] == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminDashboardPage(
+                adminName: data['rollNumber'],
+                subject: "Assigned Subject", // baad me dynamic karenge
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Not an admin account'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Invalid Admin Credentials!'),
+          SnackBar(
+            content: Text(data['message'] ?? 'Login Failed'),
             backgroundColor: Colors.red,
           ),
         );

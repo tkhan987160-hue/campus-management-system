@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class AdminAttendancePage extends StatefulWidget {
@@ -18,31 +20,31 @@ class _AdminAttendancePageState extends State<AdminAttendancePage> {
   String selectedSection = 'A';
 
   Future<void> fetchStudents() async {
-    final url = Uri.parse('http://10.0.2.2:5000/api/students');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-    try {
-      final response = await http.get(url);
+    final url = Uri.parse("${ApiService.baseUrl}/api/students");
 
-      if (response.statusCode == 200) {
-        final List data = jsonDecode(response.body);
+    final response = await http.get(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
 
-        setState(() {
-          students = data.map((s) {
-            return {
-              'id': s['_id'],
-              'rollNumber': s['rollNumber'],
-              'name': s['name'],
-              'status': 'P', // default Present
-            };
-          }).toList();
-        });
-      } else {
-        throw Exception('Failed to load students');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ $e'), backgroundColor: Colors.red),
-      );
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+
+      setState(() {
+        students = data.map((s) {
+          return {
+            'rollNumber': s['rollNumber'],
+            'name': s['name'],
+            'status': 'P',
+          };
+        }).toList();
+      });
     }
   }
 
@@ -78,20 +80,26 @@ class _AdminAttendancePageState extends State<AdminAttendancePage> {
   }
 
   Future<void> _saveAttendance() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
     final date =
         '${selectedDate.year}-${selectedDate.month}-${selectedDate.day}';
 
     for (final student in students) {
-      final url = Uri.parse('http://10.0.2.2:5000/api/attendance/mark');
+      final url = Uri.parse("${ApiService.baseUrl}/api/attendance/mark");
 
       await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode({
-          'studentId': student['id'],
+          'rollNumber': student['rollNumber'], // 🔥 IMPORTANT CHANGE
           'subject': widget.subject,
           'date': date,
-          'status': student['status'], // P / A / L
+          'status': student['status'],
         }),
       );
     }

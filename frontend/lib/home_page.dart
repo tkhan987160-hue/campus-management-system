@@ -423,7 +423,7 @@ class _HomePageState extends State<HomePage> {
         Widget? page;
 
         if (card.title == 'Attendance') {
-          page = AttendancePage(studentId: widget.studentId);
+          page = AttendancePage();
         } else if (card.title == 'Assignments') {
           page = const AssignmentsPage();
         } else if (card.title == 'Results') {

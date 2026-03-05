@@ -84,7 +84,7 @@ router.post('/login', async (req, res) => {
         role: foundUser.role,
         rollNumber: foundUser.rollNumber,
       },
-      'mySuperSecretKey@123',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 

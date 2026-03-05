@@ -39,4 +39,34 @@ class ApiService {
       body: jsonEncode({"rollNumber": rollNumber, "password": password}),
     );
   }
+
+  /* =========================
+   GET ATTENDANCE STATS
+========================= */
+  static Future<http.Response> getAttendanceStats(String token) async {
+    final url = Uri.parse("$baseUrl/api/attendance/stats");
+
+    return await http.get(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+  }
+
+  /* =========================
+   GET SUBJECT-WISE ATTENDANCE
+========================= */
+  static Future<http.Response> getSubjectWise(String token) async {
+    final url = Uri.parse("$baseUrl/api/attendance/subject-wise");
+
+    return await http.get(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+  }
 }

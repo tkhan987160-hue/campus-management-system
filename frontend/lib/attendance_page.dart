@@ -1,11 +1,11 @@
 import 'package:campus_link/widgets/app_scroll_wrapper.dart';
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 class AttendancePage extends StatefulWidget {
-  final String studentId;
-  const AttendancePage({super.key, required this.studentId});
+  const AttendancePage({super.key});
 
   @override
   State<AttendancePage> createState() => _AttendancePageState();
@@ -25,45 +25,45 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   Future<void> fetchAttendancePercentage() async {
-    final url = Uri.parse(
-      'http://10.0.2.2:5000/api/attendance/stats/${widget.studentId}',
-    );
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
 
-    final response = await http.get(url);
+  final response = await ApiService.getAttendanceStats(token!);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        attendancePercentage = double.parse(data['percentage']);
-        isLoading = false;
-      });
-    }
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+
+    setState(() {
+      attendancePercentage =
+          data['attendancePercentage'].toDouble();
+      isLoading = false;
+    });
   }
+}
 
   Future<void> fetchSubjectWiseAttendance() async {
-    final url = Uri.parse(
-      'http://10.0.2.2:5000/api/attendance/subject-wise/${widget.studentId}',
-    );
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
 
-    final response = await http.get(url);
+  final response = await ApiService.getSubjectWise(token!);
 
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
+  if (response.statusCode == 200) {
+    final List data = jsonDecode(response.body);
 
-      setState(() {
-        subjects = data.map<Subject>((item) {
-          return Subject(
-            item['subject'],
-            item['present'],
-            item['total'],
-            Colors.orange,
-          );
-        }).toList();
+    setState(() {
+      subjects = data.map<Subject>((item) {
+        return Subject(
+          item['subject'],
+          item['present'],
+          item['total'],
+          Colors.orange,
+        );
+      }).toList();
 
-        isLoading = false;
-      });
-    }
+      isLoading = false;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {

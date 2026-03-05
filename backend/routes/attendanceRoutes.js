@@ -9,9 +9,9 @@ const mongoose = require('mongoose');
 ============================ */
 router.post('/mark', auth, async (req, res) => {
   try {
-    const { studentId, subject, date, status } = req.body;
+    const {subject, date, status } = req.body;
 
-    if (!studentId || !subject || !date || !status) {
+    if (!subject || !date || !status) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -24,7 +24,7 @@ router.post('/mark', auth, async (req, res) => {
     const normalizedStatus = statusMap[status] || status;
 
     const existing = await Attendance.findOne({
-      studentId,
+      rollNumber: req.user.rollNumber,
       subject,
       date,
     });
@@ -36,7 +36,7 @@ router.post('/mark', auth, async (req, res) => {
     }
 
     const attendance = new Attendance({
-      studentId,
+      rollNumber: req.user.rollNumber,
       subject,
       date,
       status: normalizedStatus,
@@ -53,13 +53,13 @@ router.post('/mark', auth, async (req, res) => {
 /* ============================
    ATTENDANCE STATS (STUDENT)
 ============================ */
-router.get('/stats/:studentId', async (req, res) => {
+router.get('/stats', auth, async (req, res) => {
   try {
-    const studentId = new mongoose.types.objectId(req.params.studentId);
+    const rollNumber = req.user.rollNumber;
 
-    const total = await Attendance.countDocuments({ studentId });
+    const total = await Attendance.countDocuments({ rollNumber });
     const present = await Attendance.countDocuments({
-      studentId,
+      rollNumber,
       status: 'present',
     });
 
@@ -79,12 +79,12 @@ router.get('/stats/:studentId', async (req, res) => {
 /* ============================
    SUBJECT-WISE ATTENDANCE
 ============================ */
-router.get('/subject-wise/:studentId', async (req, res) => {
+router.get('/subject-wise', auth, async (req, res) => {
   try {
-    const studentId = req.params.studentId;
+    const rollNumber = req.user.rollNumber;
 
     const data = await Attendance.aggregate([
-      { $match: { studentId: studentId } },
+      { $match: { rollNumber } },
       {
         $group: {
           _id: '$subject',
@@ -115,10 +115,10 @@ router.get('/subject-wise/:studentId', async (req, res) => {
 /* ============================
    ALL ATTENDANCE RECORDS
 ============================ */
-router.get('/:studentId', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const records = await Attendance.find({
-      studentId: req.params.studentId,
+      rollNumber: req.user.rollNumber,
     }).sort({ date: -1 });
 
     res.json(records);
