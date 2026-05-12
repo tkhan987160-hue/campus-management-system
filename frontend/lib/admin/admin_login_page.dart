@@ -15,8 +15,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool isLoading = false;
 
-  void _handleLogin() async {
+  Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       final response = await ApiService.login(
         _usernameController.text,
@@ -173,22 +174,30 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ElevatedButton(
-                    onPressed: _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      'Login as Admin',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            setState(() {
+                              isLoading = true;
+                            });
+
+                            await _handleLogin(); // yaha apna actual function name
+
+                            setState(() {
+                              isLoading = false;
+                            });
+                          },
+
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text("Admin Login"),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -197,35 +206,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   child: const Text(
                     'Back to Student Login',
                     style: TextStyle(color: Color(0xFFFF6B35)),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                  ),
-                  child: const Column(
-                    children: [
-                      Text(
-                        '🔐 Demo Credentials:',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        'Username: admin',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      Text(
-                        'Password: admin123',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ],
                   ),
                 ),
               ],

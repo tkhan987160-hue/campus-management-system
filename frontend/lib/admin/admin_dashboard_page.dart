@@ -17,15 +17,7 @@ class AdminDashboardPage extends StatelessWidget {
   });
 
   bool _isAllowed(String feature) {
-    if (subject == 'Maths') {
-      return ['attendance', 'assignments', 'results'].contains(feature);
-    }
-
-    if (subject == 'Physics') {
-      return ['attendance', 'results', 'notices'].contains(feature);
-    }
-
-    return false;
+    return true;
   }
 
   @override

@@ -80,7 +80,9 @@ class _AdminFeesPageState extends State<AdminFeesPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6B35),
+            ),
             onPressed: () {
               if (titleController.text.isNotEmpty &&
                   amountController.text.isNotEmpty &&
@@ -113,7 +115,9 @@ class _AdminFeesPageState extends State<AdminFeesPage> {
   void _showEditDialog(int index) {
     final item = feesList[index];
     final titleController = TextEditingController(text: item.title);
-    final amountController = TextEditingController(text: item.amount.toString());
+    final amountController = TextEditingController(
+      text: item.amount.toString(),
+    );
     final dateController = TextEditingController(text: item.dueDate);
 
     showDialog(
@@ -177,7 +181,9 @@ class _AdminFeesPageState extends State<AdminFeesPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6B35),
+            ),
             onPressed: () {
               setState(() {
                 feesList[index] = FeeData(
@@ -213,79 +219,235 @@ class _AdminFeesPageState extends State<AdminFeesPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: feesList.length,
-        itemBuilder: (context, index) {
-          final item = feesList[index];
+      body: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: Container(
+              width: 1300,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1a1a1a),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: DataTable(
+                columnSpacing: 70,
+                headingRowHeight: 70,
+                dataRowMinHeight: 70,
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 15),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1a1a1a),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.red.withOpacity(0.3)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                headingRowColor: MaterialStateProperty.all(
+                  const Color(0xFF222222),
+                ),
+
+                columns: const [
+                  DataColumn(
+                    label: Text(
+                      'Roll No',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
+                  DataColumn(
+                    label: Text(
+                      'Student Name',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
+                  DataColumn(
+                    label: Text(
+                      'Total Fees',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
+                  DataColumn(
+                    label: Text('Paid', style: TextStyle(color: Colors.white)),
+                  ),
+
+                  DataColumn(
+                    label: Text(
+                      'Pending',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
+                  DataColumn(
+                    label: Text(
+                      'Status',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
+                  DataColumn(
+                    label: Text(
+                      'Notify',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+
+                rows: [
+                  DataRow(
+                    cells: [
+                      DataCell(
+                        Text('101', style: TextStyle(color: Colors.white)),
+                      ),
+
+                      DataCell(
+                        Text(
+                          'Tosif Khan',
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '₹${item.amount}',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red,
-                        ),
+
+                      DataCell(
+                        Text('₹45000', style: TextStyle(color: Colors.white)),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today, size: 14, color: Colors.grey.shade500),
-                          const SizedBox(width: 5),
-                          Text(
-                            'Due: ${item.dueDate}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+
+                      DataCell(
+                        Text('₹45000', style: TextStyle(color: Colors.green)),
+                      ),
+
+                      DataCell(
+                        Text('₹0', style: TextStyle(color: Colors.green)),
+                      ),
+
+                      DataCell(
+                        Text(
+                          'PAID',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
+                        ),
+                      ),
+
+                      DataCell(Icon(Icons.notifications, color: Colors.green)),
+                    ],
+                  ),
+
+                  DataRow(
+                    cells: [
+                      DataCell(
+                        Text('102', style: TextStyle(color: Colors.white)),
+                      ),
+
+                      DataCell(
+                        Text(
+                          'Kasif Khan',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+
+                      DataCell(
+                        Text('₹45000', style: TextStyle(color: Colors.white)),
+                      ),
+
+                      DataCell(
+                        Text('₹20000', style: TextStyle(color: Colors.orange)),
+                      ),
+
+                      DataCell(
+                        Text('₹25000', style: TextStyle(color: Colors.red)),
+                      ),
+
+                      DataCell(
+                        Text(
+                          'PENDING',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                      DataCell(
+                        Icon(Icons.notifications_active, color: Colors.red),
                       ),
                     ],
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () => _showEditDialog(index),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      feesList.removeAt(index);
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('🗑️ Fee Deleted!'),
-                        backgroundColor: Colors.red,
+
+                  DataRow(
+                    cells: [
+                      DataCell(
+                        Text('103', style: TextStyle(color: Colors.white)),
                       ),
-                    );
-                  },
-                ),
-              ],
+
+                      DataCell(
+                        Text('Gungun', style: TextStyle(color: Colors.white)),
+                      ),
+
+                      DataCell(
+                        Text('₹45000', style: TextStyle(color: Colors.white)),
+                      ),
+
+                      DataCell(
+                        Text('₹40000', style: TextStyle(color: Colors.orange)),
+                      ),
+
+                      DataCell(
+                        Text('₹5000', style: TextStyle(color: Colors.red)),
+                      ),
+
+                      DataCell(
+                        Text(
+                          'PENDING',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                      DataCell(
+                        Icon(Icons.notifications_active, color: Colors.red),
+                      ),
+                    ],
+                  ),
+
+                  DataRow(
+                    cells: [
+                      DataCell(
+                        Text('104', style: TextStyle(color: Colors.white)),
+                      ),
+
+                      DataCell(
+                        Text(
+                          'Pinki nayak',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+
+                      DataCell(
+                        Text('₹45000', style: TextStyle(color: Colors.white)),
+                      ),
+
+                      DataCell(
+                        Text('₹45000', style: TextStyle(color: Colors.orange)),
+                      ),
+
+                      DataCell(Text('₹0', style: TextStyle(color: Colors.red))),
+
+                      DataCell(
+                        Text(
+                          'PAID',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                      DataCell(Icon(Icons.notifications, color: Colors.green)),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          );
-        },
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddDialog,

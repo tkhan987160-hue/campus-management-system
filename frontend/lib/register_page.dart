@@ -17,6 +17,7 @@ class _RegisterPageState extends State<RegisterPage>
   final TextEditingController _nameController = TextEditingController();
 
   bool _obscurePassword = true;
+  bool isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -42,7 +43,7 @@ class _RegisterPageState extends State<RegisterPage>
     super.dispose();
   }
 
-  void _handleRegister() async {
+  Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
     final rollNumber = _rollNumberController.text.trim();
     final name = _nameController.text.trim();
@@ -80,11 +81,15 @@ class _RegisterPageState extends State<RegisterPage>
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
       body: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1000, maxHeight: 600),
+          constraints: BoxConstraints(
+            maxWidth: 1000,
+            maxHeight: isMobile ? double.infinity : 600,
+          ),
           margin: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
@@ -97,28 +102,38 @@ class _RegisterPageState extends State<RegisterPage>
                 Positioned.fill(
                   child: Container(color: const Color(0xFF1a1a1a)),
                 ),
-                ClipPath(
-                  clipper: DiagonalClipper(),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFFFF6B35),
-                          Color(0xFFFF8C42),
-                          Color(0xFFFFB142),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                if (!isMobile)
+                  ClipPath(
+                    clipper: DiagonalClipper(),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFFFF6B35),
+                            Color(0xFFFF8C42),
+                            Color(0xFFFFB142),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Row(
-                  children: [
-                    Expanded(child: _buildWelcomeSection()),
-                    Expanded(child: _buildRegisterForm()),
-                  ],
-                ),
+                isMobile
+                    ? SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            _buildWelcomeSection(),
+                            _buildRegisterForm(),
+                          ],
+                        ),
+                      )
+                    : Row(
+                        children: [
+                          Expanded(child: _buildWelcomeSection()),
+                          Expanded(child: _buildRegisterForm()),
+                        ],
+                      ),
               ],
             ),
           ),
@@ -131,7 +146,10 @@ class _RegisterPageState extends State<RegisterPage>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 40),
+        padding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width < 768 ? 25 : 50,
+          vertical: 40,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -141,10 +159,12 @@ class _RegisterPageState extends State<RegisterPage>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Register',
                     style: TextStyle(
-                      fontSize: 36,
+                      fontSize: MediaQuery.of(context).size.width < 768
+                          ? 30
+                          : 36,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -294,23 +314,30 @@ class _RegisterPageState extends State<RegisterPage>
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: _handleRegister,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text(
-                    'Register',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1,
-                    ),
-                  ),
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          setState(() {
+                            isLoading = true;
+                          });
+
+                          await _handleRegister();
+
+                          setState(() {
+                            isLoading = false;
+                          });
+                        },
+
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text("Register"),
                 ),
               ),
               const SizedBox(height: 20),
@@ -357,26 +384,28 @@ class _RegisterPageState extends State<RegisterPage>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Padding(
-        padding: const EdgeInsets.all(60),
+        padding: EdgeInsets.all(
+          MediaQuery.of(context).size.width < 768 ? 25 : 60,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'WELCOME!',
               style: TextStyle(
-                fontSize: 48,
+                fontSize: MediaQuery.of(context).size.width < 768 ? 34 : 48,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 letterSpacing: 2,
                 height: 1.2,
               ),
             ),
-            const SizedBox(height: 30),
+            SizedBox(height: MediaQuery.of(context).size.width < 768 ? 15 : 30),
             Text(
               "We're delighted to have you here. If you need any assistance, feel free to reach out.",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: MediaQuery.of(context).size.width < 768 ? 14 : 16,
                 color: Colors.white.withOpacity(0.95),
                 height: 1.6,
                 letterSpacing: 0.3,

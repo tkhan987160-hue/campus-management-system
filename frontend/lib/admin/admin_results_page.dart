@@ -8,311 +8,135 @@ class AdminResultsPage extends StatefulWidget {
 }
 
 class _AdminResultsPageState extends State<AdminResultsPage> {
-  final List<ResultData> resultsList = [
-    ResultData('Data Structures', 85, 90),
-    ResultData('DBMS', 78, 82),
-    ResultData('Web Development', 92, 88),
-  ];
-
-  void _showAddDialog() {
-    final subjectController = TextEditingController();
-    final midTermController = TextEditingController();
-    final endTermController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a1a),
-        title: const Text('Add Result', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: subjectController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Subject Name',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: midTermController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Mid-Term Marks',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: endTermController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'End-Term Marks',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35)),
-            onPressed: () {
-              if (subjectController.text.isNotEmpty &&
-                  midTermController.text.isNotEmpty &&
-                  endTermController.text.isNotEmpty) {
-                setState(() {
-                  resultsList.add(
-                    ResultData(
-                      subjectController.text,
-                      int.parse(midTermController.text),
-                      int.parse(endTermController.text),
-                    ),
-                  );
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('✅ Result Added!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditDialog(int index) {
-    final item = resultsList[index];
-    final subjectController = TextEditingController(text: item.subject);
-    final midTermController = TextEditingController(text: item.midTerm.toString());
-    final endTermController = TextEditingController(text: item.endTerm.toString());
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a1a),
-        title: const Text('Edit Result', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: subjectController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Subject Name',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: midTermController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Mid-Term Marks',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: endTermController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'End-Term Marks',
-                labelStyle: TextStyle(color: Colors.grey.shade400),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade700),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35)),
-            onPressed: () {
-              setState(() {
-                resultsList[index] = ResultData(
-                  subjectController.text,
-                  int.parse(midTermController.text),
-                  int.parse(endTermController.text),
-                );
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✅ Result Updated!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1a1a1a),
-        title: const Text('Manage Results', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Manage Results',
+          style: TextStyle(color: Colors.white),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: resultsList.length,
-        itemBuilder: (context, index) {
-          final item = resultsList[index];
-          final total = item.midTerm + item.endTerm;
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 15),
+      body: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Container(
+            width: 1200,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1a1a1a),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF1a1a1a)),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.subject,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildMarkItem('Mid', item.midTerm),
-                          _buildMarkItem('End', item.endTerm),
-                          _buildMarkItem('Total', total),
-                        ],
-                      ),
-                    ],
+            child: DataTable(
+              headingRowColor: MaterialStateProperty.all(
+                const Color(0xFF1a1a1a),
+              ),
+              dataRowColor: MaterialStateProperty.all(const Color(0xFF111111)),
+              columns: const [
+                DataColumn(
+                  label: Text('Roll No', style: TextStyle(color: Colors.white)),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Student Name',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () => _showEditDialog(index),
+                DataColumn(
+                  label: Text('DBMS', style: TextStyle(color: Colors.white)),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      resultsList.removeAt(index);
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('🗑️ Result Deleted!'),
-                        backgroundColor: Colors.red,
+                DataColumn(
+                  label: Text('Web Dev', style: TextStyle(color: Colors.white)),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Data Structure',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+              rows: const [
+                DataRow(
+                  cells: [
+                    DataCell(
+                      Text('101', style: TextStyle(color: Colors.white)),
+                    ),
+                    DataCell(
+                      Text('Tosif Khan', style: TextStyle(color: Colors.white)),
+                    ),
+                    DataCell(Text('89', style: TextStyle(color: Colors.green))),
+                    DataCell(
+                      Text('54', style: TextStyle(color: Colors.orange)),
+                    ),
+                    DataCell(Text('55', style: TextStyle(color: Colors.blue))),
+                  ],
+                ),
+
+                DataRow(
+                  cells: [
+                    DataCell(
+                      Text('102', style: TextStyle(color: Colors.white)),
+                    ),
+                    DataCell(
+                      Text('Kasif Khan', style: TextStyle(color: Colors.white)),
+                    ),
+                    DataCell(Text('78', style: TextStyle(color: Colors.green))),
+                    DataCell(
+                      Text('67', style: TextStyle(color: Colors.orange)),
+                    ),
+                    DataCell(Text('81', style: TextStyle(color: Colors.blue))),
+                  ],
+                ),
+
+                DataRow(
+                  cells: [
+                    DataCell(
+                      Text('103', style: TextStyle(color: Colors.white)),
+                    ),
+                    DataCell(
+                      Text(
+                        'Gungun kumari',
+                        style: TextStyle(color: Colors.white),
                       ),
-                    );
-                  },
+                    ),
+                    DataCell(Text('91', style: TextStyle(color: Colors.green))),
+                    DataCell(
+                      Text('88', style: TextStyle(color: Colors.orange)),
+                    ),
+                    DataCell(Text('79', style: TextStyle(color: Colors.blue))),
+                  ],
+                ),
+
+                DataRow(
+                  cells: [
+                    DataCell(
+                      Text('104', style: TextStyle(color: Colors.white)),
+                    ),
+                    DataCell(
+                      Text(
+                        'Pinki Nayak',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    DataCell(Text('75', style: TextStyle(color: Colors.green))),
+                    DataCell(
+                      Text('57', style: TextStyle(color: Colors.orange)),
+                    ),
+                    DataCell(Text('82', style: TextStyle(color: Colors.blue))),
+                  ],
                 ),
               ],
             ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDialog,
-        backgroundColor: const Color(0xFFFF6B35),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Result'),
-      ),
-    );
-  }
-
-  Widget _buildMarkItem(String label, int marks) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          '$marks',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
           ),
         ),
-      ],
+      ),
     );
   }
-}
-
-class ResultData {
-  String subject;
-  int midTerm;
-  int endTerm;
-
-  ResultData(this.subject, this.midTerm, this.endTerm);
 }

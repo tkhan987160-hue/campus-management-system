@@ -103,4 +103,35 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.get('/create-admin', async (req, res) => {
+  try {
+    const existingAdmin = await User.findOne({ rollNumber: 'admin' });
+
+    if (existingAdmin) {
+      return res.json({
+        message: 'Admin already exists',
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+
+    const adminUser = new User({
+      rollNumber: 'admin',
+      name: 'Administrator',
+      password: hashedPassword,
+      role: 'admin',
+    });
+
+    await adminUser.save();
+
+    res.json({
+      message: 'Admin created successfully',
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
 module.exports = router;

@@ -18,6 +18,7 @@ class _LoginPageState extends State<LoginPage>
   final TextEditingController _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
+  bool isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -42,7 +43,7 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  void _handleLogin() async {
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     final rollNumber = _rollNumberController.text.trim();
@@ -65,10 +66,8 @@ class _LoginPageState extends State<LoginPage>
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomePage(
-              username: data['name'],
-              studentId: data['rollNumber'],
-            ),
+            builder: (context) =>
+                HomePage(username: data['name'], studentId: data['rollNumber']),
           ),
         );
       } else {
@@ -90,46 +89,75 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 760;
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 1000, maxHeight: 600),
-          margin: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: const Color(0xFFFF6B35), width: 3),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Container(color: const Color(0xFF1a1a1a)),
-                ),
-                ClipPath(
-                  clipper: DiagonalClipper(),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFFFF6B35),
-                          Color(0xFFFF8C42),
-                          Color(0xFFFFB142),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+      body: SingleChildScrollView(
+        child: Center(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: 1000,
+              maxHeight: isMobile ? 750 : 600,
+            ),
+            margin: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: const Color(0xFFFF6B35), width: 3),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: isMobile
+                            ? const LinearGradient(
+                                colors: [Color(0xFF1a1a1a), Color(0xFF111111)],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              )
+                            : null,
+                        color: isMobile ? null : const Color(0xFF1a1a1a),
                       ),
                     ),
                   ),
-                ),
-                Row(
-                  children: [
-                    Expanded(child: _buildLoginForm()),
-                    Expanded(child: _buildWelcomeSection()),
-                  ],
-                ),
-              ],
+                  if (!isMobile)
+                    ClipPath(
+                      clipper: DiagonalClipper(),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFFFF6B35),
+                              Color(0xFFFF8C42),
+                              Color(0xFFFFB142),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                      ),
+                    ),
+                  isMobile
+                      ? Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 40),
+                              child: _buildWelcomeSection(),
+                            ),
+                            _buildLoginForm(),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            Expanded(child: _buildLoginForm()),
+                            Expanded(child: _buildWelcomeSection()),
+                          ],
+                        ),
+                ],
+              ),
             ),
           ),
         ),
@@ -141,7 +169,10 @@ class _LoginPageState extends State<LoginPage>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 40),
+        padding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width < 768 ? 25 : 60,
+          vertical: 40,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -155,10 +186,12 @@ class _LoginPageState extends State<LoginPage>
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     'Login',
                     style: TextStyle(
-                      fontSize: 42,
+                      fontSize: MediaQuery.of(context).size.width < 768
+                          ? 32
+                          : 42,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -262,23 +295,30 @@ class _LoginPageState extends State<LoginPage>
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: _handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1,
-                    ),
-                  ),
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          setState(() {
+                            isLoading = true;
+                          });
+
+                          await _handleLogin();
+
+                          setState(() {
+                            isLoading = false;
+                          });
+                        },
+
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text("Login"),
                 ),
               ),
               const SizedBox(height: 25),
@@ -325,15 +365,17 @@ class _LoginPageState extends State<LoginPage>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Padding(
-        padding: const EdgeInsets.all(60),
+        padding: EdgeInsets.all(
+          MediaQuery.of(context).size.width < 768 ? 25 : 60,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'WELCOME\nBACK!',
               style: TextStyle(
-                fontSize: 48,
+                fontSize: MediaQuery.of(context).size.width < 768 ? 28 : 48,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 letterSpacing: 2,
@@ -344,7 +386,7 @@ class _LoginPageState extends State<LoginPage>
             Text(
               "We are happy to have you with us again. If you need anything, we are here to help.",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: MediaQuery.of(context).size.width < 768 ? 14 : 16,
                 color: Colors.white.withOpacity(0.95),
                 height: 1.6,
                 letterSpacing: 0.3,

@@ -1,10 +1,68 @@
-import 'package:campus_link/widgets/app_scroll_wrapper.dart';
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
+// ignore: deprecated_member_use
+import 'dart:html' as html;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'id_card_page.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   final String username;
 
   const ProfilePage({super.key, required this.username});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final ScrollController _scrollController = ScrollController();
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  Uint8List? _profileImage;
+
+  Future<void> _pickImage() async {
+    final uploadInput = html.FileUploadInputElement();
+    uploadInput.accept = 'image/*';
+    uploadInput.click();
+
+    uploadInput.onChange.listen((event) async {
+      final file = uploadInput.files!.first;
+      final reader = html.FileReader();
+
+      reader.readAsArrayBuffer(file);
+
+      reader.onLoadEnd.listen((event) async {
+        final bytes = reader.result as Uint8List;
+
+        final prefs = await SharedPreferences.getInstance();
+
+        String base64Image = base64Encode(bytes);
+
+        await prefs.setString('profile_image_${widget.username}', base64Image);
+
+        setState(() {
+          _profileImage = bytes;
+        });
+      });
+    });
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    String? imageString = prefs.getString('profile_image_${widget.username}');
+
+    if (imageString != null) {
+      setState(() {
+        _profileImage = base64Decode(imageString);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,17 +87,35 @@ class ProfilePage extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: AppScrollWrapper(
-          child: Column(
-            children: [
-              _buildProfileHeader(),
-              const SizedBox(height: 30),
-              _buildInfoSection(),
-              const SizedBox(height: 20),
-              _buildAcademicSection(),
-              const SizedBox(height: 20),
-              _buildActionButtons(context),
-            ],
+        child: ScrollbarTheme(
+          data: ScrollbarThemeData(
+            thumbColor: WidgetStateProperty.all(Colors.white54),
+            trackColor: WidgetStateProperty.all(Colors.white12),
+            trackBorderColor: WidgetStateProperty.all(Colors.white24),
+          ),
+          child: Scrollbar(
+            controller: _scrollController,
+            thumbVisibility: true,
+            interactive: true,
+            thickness: 8,
+            radius: const Radius.circular(12),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildProfileHeader(),
+                    const SizedBox(height: 30),
+                    _buildInfoSection(),
+                    const SizedBox(height: 20),
+                    _buildAcademicSection(),
+                    const SizedBox(height: 20),
+                    _buildActionButtons(context),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -64,28 +140,61 @@ class ProfilePage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: const Color(0xFFFF6B35),
-              child: Text(
-                username.isNotEmpty ? username[0].toUpperCase() : 'U',
-                style: const TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
                   color: Colors.white,
+                  borderRadius: BorderRadius.circular(60),
+                ),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: const Color(0xFFFF6B35),
+                  backgroundImage: _profileImage != null
+                      ? MemoryImage(_profileImage!)
+                      : null,
+                  child: _profileImage == null
+                      ? Text(
+                          widget.username.isNotEmpty
+                              ? widget.username[0].toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        )
+                      : null,
                 ),
               ),
-            ),
+
+              Positioned(
+                right: -12,
+                bottom: -12,
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFF6B35),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
+
           const SizedBox(height: 15),
           Text(
-            username,
+            widget.username,
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -104,6 +213,7 @@ class ProfilePage extends StatelessWidget {
 
   Widget _buildInfoSection() {
     return Container(
+      margin: const EdgeInsets.only(right: 4, left: 4),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFF1a1a1a),
@@ -123,13 +233,13 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 20),
           _buildInfoRow(Icons.badge, 'Student ID', 'BCA2023045'),
           const SizedBox(height: 15),
-          _buildInfoRow(Icons.email, 'Email', '$username@college.edu'),
+          _buildInfoRow(Icons.email, 'Email', '${widget.username}@college.edu'),
           const SizedBox(height: 15),
           _buildInfoRow(Icons.phone, 'Phone', '+91 98765 43210'),
           const SizedBox(height: 15),
-          _buildInfoRow(Icons.calendar_today, 'DOB', '15 Jan 2004'),
+          _buildInfoRow(Icons.calendar_today, 'DOB', '5 sep 2004'),
           const SizedBox(height: 15),
-          _buildInfoRow(Icons.location_on, 'Address', 'Mumbai, Maharashtra'),
+          _buildInfoRow(Icons.location_on, 'Address', 'Noida, Uttar Pradesh'),
         ],
       ),
     );
@@ -208,7 +318,17 @@ class ProfilePage extends StatelessWidget {
           'Download ID Card',
           Icons.download,
           Colors.green,
-          () {},
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => IdCardPage(
+                  username: widget.username,
+                  profileImage: _profileImage,
+                ),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 15),
         _buildActionButton('Logout', Icons.logout, Colors.red, () {
@@ -252,5 +372,11 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 }

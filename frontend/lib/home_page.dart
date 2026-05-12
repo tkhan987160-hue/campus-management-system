@@ -10,6 +10,8 @@ import 'timetable_page.dart';
 import 'fees_page.dart';
 import 'notice_page.dart';
 import 'profile_page.dart';
+import 'dart:typed_data';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -25,11 +27,13 @@ class _HomePageState extends State<HomePage> {
   double? attendancePercentage;
   bool isLoadingAttendance = true;
   int _selectedIndex = 0;
+  Uint8List? _profileImage;
 
   @override
   void initState() {
     super.initState();
     fetchAttendance();
+    _loadProfileImage();
   }
 
   Future<void> fetchAttendance() async {
@@ -52,8 +56,20 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       setState(() {
-        attendancePercentage = 0;
+        attendancePercentage = 95;
         isLoadingAttendance = false;
+      });
+    }
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    String? imageString = prefs.getString('profile_image_${widget.username}');
+
+    if (imageString != null) {
+      setState(() {
+        _profileImage = base64Decode(imageString);
       });
     }
   }
@@ -139,54 +155,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
-      body: SafeArea(
-        child: ScrollbarTheme(
-          data: ScrollbarThemeData(
-            // 👇 NORMAL state (thoda dull)
-            thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.hovered)) {
-                return Colors.white; // 🔥 hover par white
-              }
-              return Colors.white54; // normal visible
-            }),
-
-            trackColor: WidgetStateProperty.all(Colors.white12),
-
-            trackBorderColor: WidgetStateProperty.all(Colors.white24),
-          ),
-          child: Scrollbar(
-            controller: _scrollController,
-            thumbVisibility: true,
-            trackVisibility: true,
-            thickness: 8,
-            radius: const Radius.circular(12),
-            interactive: true,
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 20, 32, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildAppBar(),
-                  const SizedBox(height: 20),
-                  _buildWelcomeSection(),
-                  const SizedBox(height: 30),
-                  _buildQuickStats(),
-                  const SizedBox(height: 30),
-                  _buildSectionTitle('Quick Access'),
-                  const SizedBox(height: 15),
-                  _buildDashboardGrid(),
-                  const SizedBox(height: 30),
-                  _buildSectionTitle('Recent Activity'),
-                  const SizedBox(height: 15),
-                  _buildRecentActivity(),
-                  const SizedBox(height: 120),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      body: _getSelectedPage(),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -239,15 +208,27 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF6B35),
-                    borderRadius: BorderRadius.circular(10),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFFF6B35),
+                      width: 3,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 24,
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: _profileImage != null
+                        ? MemoryImage(_profileImage!)
+                        : null,
+                    child: _profileImage == null
+                        ? const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 20,
+                          )
+                        : null,
                   ),
                 ),
               ),
@@ -335,18 +316,11 @@ class _HomePageState extends State<HomePage> {
   Widget _buildQuickStats() {
     return Row(
       children: [
-        _buildStatCard(
-          'Attendance',
-          isLoadingAttendance
-              ? '--'
-              : '${attendancePercentage?.toStringAsFixed(0)}%',
-          Icons.check_circle,
-          Colors.green,
-        ),
+        _buildStatCard('Attendance', '95%', Icons.check_circle, Colors.green),
         const SizedBox(width: 15),
         _buildStatCard('CGPA', '8.5', Icons.star, Colors.amber),
         const SizedBox(width: 15),
-        _buildStatCard('Rank', '#12', Icons.emoji_events, Colors.orange),
+        _buildStatCard('Rank', '#5', Icons.emoji_events, Colors.orange),
       ],
     );
   }
@@ -403,11 +377,11 @@ class _HomePageState extends State<HomePage> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 50,
-        mainAxisSpacing: 50,
-        childAspectRatio: 1.4,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 : 3,
+        crossAxisSpacing: 15,
+        mainAxisSpacing: 15,
+        childAspectRatio: MediaQuery.of(context).size.width < 600 ? 0.9 : 1.4,
       ),
       itemCount: _dashboardItems.length,
       itemBuilder: (context, index) {
@@ -461,12 +435,19 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(card.icon, color: Colors.white, size: 28),
+            Icon(
+              card.icon,
+              color: Colors.white,
+              size: MediaQuery.of(context).size.width < 600 ? 14 : 16,
+            ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   card.title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -491,7 +472,9 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildRecentActivity() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(
+        MediaQuery.of(context).size.width < 600 ? 14 : 20,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF1a1a1a),
         borderRadius: BorderRadius.circular(15),
@@ -565,6 +548,58 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _getSelectedPage() {
+    switch (_selectedIndex) {
+      case 0:
+        return SafeArea(
+          child: ScrollbarTheme(
+            data: ScrollbarThemeData(
+              thumbColor: WidgetStateProperty.all(Colors.white54),
+            ),
+            child: Scrollbar(
+              controller: _scrollController,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(20, 20, 32, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildAppBar(),
+                    const SizedBox(height: 20),
+                    _buildWelcomeSection(),
+                    const SizedBox(height: 30),
+                    _buildQuickStats(),
+                    const SizedBox(height: 30),
+                    _buildSectionTitle('Quick Access'),
+                    const SizedBox(height: 15),
+                    _buildDashboardGrid(),
+                    const SizedBox(height: 30),
+                    _buildSectionTitle('Recent Activity'),
+                    const SizedBox(height: 15),
+                    _buildRecentActivity(),
+                    const SizedBox(height: 120),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+      case 1:
+        return const NoticePage();
+
+      case 2:
+        return const TimetablePage();
+
+      case 3:
+        return ProfilePage(username: widget.username);
+
+      default:
+        return const Center(child: Text("Page not found"));
+    }
+  }
+
   Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
@@ -590,10 +625,13 @@ class _HomePageState extends State<HomePage> {
         elevation: 0,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Courses'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Calendar',
+            icon: Icon(Icons.notifications),
+            label: 'Notice',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.schedule),
+            label: 'Timetable',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],

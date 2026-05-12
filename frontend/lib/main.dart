@@ -30,152 +30,189 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 900, maxHeight: 600),
-          margin: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: const Color(0xFFFF6B35), width: 3),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF6B35), Color(0xFFFF8C42), Color(0xFFFFB142)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      body: SingleChildScrollView(
+        child: Center(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: 900,
+              maxHeight: isMobile ? 700 : 600,
             ),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(60),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.school_rounded,
-                    size: 80,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(height: 30),
-                  const Text(
-                    'CAMPUS LINK',
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
+            margin: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: const Color(0xFFFF6B35), width: 3),
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFFFF6B35),
+                  Color(0xFFFF8C42),
+                  Color(0xFFFFB142),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: EdgeInsets.all(isMobile ? 25 : 60),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.school_rounded,
+                      size: 80,
                       color: Colors.white,
-                      letterSpacing: 3,
                     ),
-                  ),
-                  const SizedBox(height: 15),
-                  Text(
-                    'Your Gateway to Campus Management',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white.withOpacity(0.9),
-                      letterSpacing: 0.5,
+                    const SizedBox(height: 30),
+                    Text(
+                      'CAMPUS LINK',
+                      style: TextStyle(
+                        fontSize: isMobile ? 34 : 48,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 3,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 60),
-                  // Student Login & Register Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildButton(context, 'Login', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginPage(),
+                    const SizedBox(height: 15),
+                    Text(
+                      'Your Gateway to Campus Management',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white.withOpacity(0.9),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 60),
+                    // Student Login & Register Buttons
+                    isMobile
+                        ? Column(
+                            children: [
+                              _buildButton(context, 'Login', () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginPage(),
+                                  ),
+                                );
+                              }, isPrimary: false),
+
+                              const SizedBox(height: 20),
+
+                              _buildButton(context, 'Register', () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const RegisterPage(),
+                                  ),
+                                );
+                              }, isPrimary: true),
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildButton(context, 'Login', () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginPage(),
+                                  ),
+                                );
+                              }, isPrimary: false),
+
+                              const SizedBox(width: 30),
+
+                              _buildButton(context, 'Register', () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const RegisterPage(),
+                                  ),
+                                );
+                              }, isPrimary: true),
+                            ],
                           ),
-                        );
-                      }, isPrimary: false),
-                      const SizedBox(width: 30),
-                      _buildButton(context, 'Register', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterPage(),
-                          ),
-                        );
-                      }, isPrimary: true),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-                  // Divider
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          color: Colors.white.withOpacity(0.3),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        child: Text(
-                          'OR',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                    const SizedBox(height: 30),
+                    // Divider
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            color: Colors.white.withOpacity(0.3),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          color: Colors.white.withOpacity(0.3),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-                  // Admin Login Button
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AdminLoginPage(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 15,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.5),
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.admin_panel_settings,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Admin Login',
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          child: Text(
+                            'OR',
                             style: TextStyle(
-                              fontSize: 16,
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 1,
                             ),
                           ),
-                        ],
+                        ),
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                    // Admin Login Button
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AdminLoginPage(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 15,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.5),
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.admin_panel_settings,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Admin Login',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -191,7 +228,7 @@ class LandingPage extends StatelessWidget {
     bool isPrimary = false,
   }) {
     return Container(
-      width: 160,
+      width: MediaQuery.of(context).size.width < 768 ? double.infinity : 160,
       height: 55,
       decoration: BoxDecoration(
         color: isPrimary ? Colors.white : Colors.transparent,
