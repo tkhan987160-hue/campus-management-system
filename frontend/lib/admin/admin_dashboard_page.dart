@@ -22,6 +22,8 @@ class AdminDashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
       appBar: AppBar(
@@ -61,28 +63,28 @@ class AdminDashboardPage extends StatelessWidget {
         thickness: 8,
         radius: const Radius.circular(10),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(isMobile ? 12 : 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildWelcomeCard(),
+              _buildWelcomeCard(isMobile),
               const SizedBox(height: 30),
-              const Text(
+              Text(
                 'Manage Campus Data',
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: isMobile ? 18 : 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
               const SizedBox(height: 20),
               GridView.count(
-                crossAxisCount: 3,
+                crossAxisCount: isMobile ? 1 : 3,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20,
-                childAspectRatio: 1.4,
+                childAspectRatio: isMobile ? 3 : 1.5,
                 children: [
                   if (_isAllowed('attendance'))
                     HoverCard(
@@ -173,41 +175,66 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildWelcomeCard() {
+  Widget _buildWelcomeCard(isMobile) {
     return Container(
-      padding: const EdgeInsets.all(25),
+      padding: EdgeInsets.all(isMobile ? 12 : 25),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFFF6B35), Color(0xFFFF8C42), Color(0xFFFFB142)],
         ),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const Row(
-        children: [
-          Icon(Icons.admin_panel_settings, size: 50, color: Colors.white),
-          SizedBox(width: 20),
-          Expanded(
-            child: Column(
+      child: isMobile
+          ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Icon(
+                  Icons.admin_panel_settings,
+                  size: 50,
+                  color: Colors.white,
+                ),
+                const SizedBox(height: 15),
+                const Text(
                   'Welcome, Admin!',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 5),
-                Text(
+                const SizedBox(height: 5),
+                const Text(
                   'Manage all campus activities from here',
                   style: TextStyle(fontSize: 14, color: Colors.white70),
                 ),
               ],
+            )
+          : const Row(
+              children: [
+                Icon(Icons.admin_panel_settings, size: 50, color: Colors.white),
+                SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome, Admin!',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Manage all campus activities from here',
+                        style: TextStyle(fontSize: 14, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

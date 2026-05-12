@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap:
+https://campus-link-39173.web.app/sitemap.xml
